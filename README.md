@@ -10,9 +10,10 @@ Listens on port 9407 (currently not configurable).
 
 ## Prebuilt Versions
 
-* [macOS](https://nightly.link/lukegb/obs_studio_exporter/workflows/build/canon/obs-studio-exporter-macos.zip)
+* [macOS (Intel)](https://nightly.link/lukegb/obs_studio_exporter/workflows/build/canon/obs-studio-exporter-macos-intel.zip)
+* [macOS (Apple Silicon)](https://nightly.link/lukegb/obs_studio_exporter/workflows/build/canon/obs-studio-exporter-macos-arm64.zip)
 * [Windows](https://nightly.link/lukegb/obs_studio_exporter/workflows/build/canon/obs-studio-exporter-windows.zip)
-* [Linux (built on Ubuntu)](https://nightly.link/lukegb/obs_studio_exporter/workflows/build/canon/obs-studio-exporter-ubuntu.zip)
+* [Linux (built on Ubuntu)](https://nightly.link/lukegb/obs_studio_exporter/workflows/build/canon/obs-studio-exporter-linux.zip)
 
 ## Metrics
 
@@ -54,7 +55,7 @@ At present, the following metric groups are exported:
 
 This project is a little bit finnicky to compile and install.
 
-1. `git submodule init && git submodule update`
+1. `git submodule update --init --recursive`
 
 ### Linux
 
@@ -64,12 +65,12 @@ This project is a little bit finnicky to compile and install.
 
 ### Windows
 
-1. Copy `obs.dll` from your OBS 64-bit install (from obs-studio/bin/64bit) to the root of the exporter checkout directory.
+1. Copy `obs.dll` from your OBS 64-bit install (from `obs-studio/bin/64bit`) to the root of the exporter checkout directory.
 2. `go build -buildmode=c-shared -o obs-studio-exporter.dll`
 3. Install by copying `obs-studio-exporter.dll` to obs-studio/obs-plugins/64bit.
 
 ### macOS
 
-1. Copy `libobs.so` from your OBS 64-bit install (Usually `/Applications/OBS.app/Contents/Frameworks/libobs.0.dylib`) to the root of the exporter checkout directory.
+1. Copy `libobs.framework` from your OBS installation (usually `/Applications/OBS.app/Contents/Frameworks/libobs.framework`) to the root of the exporter checkout directory.
 2. `go build -buildmode=c-shared -o obs-studio-exporter.so`
 3. Install by copying `obs-studio-exporter.so` to `/Applications/OBS.app/Contents/PlugIns/`.
