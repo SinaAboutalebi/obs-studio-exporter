@@ -49,8 +49,7 @@ jobs:
       - name: Install OBS
         shell: pwsh
         run: |
-          $installer = "OBS-Studio-$env:OBS_VERSION-Full-Installer-x64.exe"
-          Invoke-WebRequest -Uri "https://cdn-fastly.obsproject.com/downloads/$installer" -OutFile obs-studio-installer.exe
+          Invoke-WebRequest -Uri "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-Full-Installer-x64.exe" -OutFile obs-studio-installer.exe
           .\obs-studio-installer.exe /S | Out-Null
       - name: Build
         shell: pwsh
