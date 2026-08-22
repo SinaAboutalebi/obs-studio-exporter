@@ -66,20 +66,10 @@ jobs:
           path: obs-studio-exporter.dll
 
   build-macos:
-    name: macOS (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
+    name: macOS ARM64
+    runs-on: macos-14
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - runner: macos-13
-            arch: intel
-            download_suffix: Intel
-            dmg_name: obs-macos-intel.dmg
-          - runner: macos-14
-            arch: arm64
-            download_suffix: Apple
-            dmg_name: obs-macos-arm64.dmg
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,8 +81,8 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Install OBS
         run: |
-          curl -L -o "${{ matrix.dmg_name }}" "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-macOS-${{ matrix.download_suffix }}.dmg"
-          hdiutil attach "./${{ matrix.dmg_name }}"
+          curl -L -o obs-macos-arm64.dmg "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-macOS-Apple.dmg"
+          hdiutil attach "./obs-macos-arm64.dmg"
       - name: Build
         run: |
           cp -R /Volumes/OBS*/OBS.app/Contents/Frameworks/libobs.framework ./libobs.framework
@@ -100,7 +90,7 @@ jobs:
       - name: Archive artifact
         uses: actions/upload-artifact@v4
         with:
-          name: obs-studio-exporter-macos-${{ matrix.arch }}
+          name: obs-studio-exporter-macos-arm64
           path: obs-studio-exporter.so
 
   release:
@@ -122,11 +112,6 @@ jobs:
         with:
           name: obs-studio-exporter-windows
           path: dist/windows
-      - name: Download macOS Intel artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: obs-studio-exporter-macos-intel
-          path: dist/macos-intel
       - name: Download macOS ARM artifact
         uses: actions/download-artifact@v4
         with:
@@ -137,7 +122,6 @@ jobs:
           mkdir -p release
           cp dist/linux/obs-studio-exporter.so release/obs-studio-exporter-linux.so
           cp dist/windows/obs-studio-exporter.dll release/obs-studio-exporter-windows.dll
-          cp dist/macos-intel/obs-studio-exporter.so release/obs-studio-exporter-macos-intel.so
           cp dist/macos-arm64/obs-studio-exporter.so release/obs-studio-exporter-macos-arm64.so
       - name: Publish Release
         uses: softprops/action-gh-release@v2
