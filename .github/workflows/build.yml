@@ -6,6 +6,9 @@ env:
   GO_VERSION: "1.21"
   OBS_VERSION: "32.2.1"
 
+permissions:
+  contents: write
+
 jobs:
   build-linux:
     name: Linux
@@ -49,8 +52,7 @@ jobs:
       - name: Install OBS
         shell: pwsh
         run: |
-          $installer = "OBS-Studio-$env:OBS_VERSION-Full-Installer-x64.exe"
-          Invoke-WebRequest -Uri "https://cdn-fastly.obsproject.com/downloads/$installer" -OutFile obs-studio-installer.exe
+          Invoke-WebRequest -Uri "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-Windows-x64-Installer.exe" -OutFile obs-studio-installer.exe
           .\obs-studio-installer.exe /S | Out-Null
       - name: Build
         shell: pwsh
@@ -64,20 +66,10 @@ jobs:
           path: obs-studio-exporter.dll
 
   build-macos:
-    name: macOS (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
+    name: macOS ARM64
+    runs-on: macos-14
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - runner: macos-13
-            arch: intel
-            download_suffix: Intel
-            dmg_name: obs-macos-intel.dmg
-          - runner: macos-14
-            arch: arm64
-            download_suffix: Apple
-            dmg_name: obs-macos-arm64.dmg
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -89,8 +81,8 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Install OBS
         run: |
-          curl -L -o "${{ matrix.dmg_name }}" "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-macOS-${{ matrix.download_suffix }}.dmg"
-          hdiutil attach "./${{ matrix.dmg_name }}"
+          curl -L -o obs-macos-arm64.dmg "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-macOS-Apple.dmg"
+          hdiutil attach "./obs-macos-arm64.dmg"
       - name: Build
         run: |
           cp -R /Volumes/OBS*/OBS.app/Contents/Frameworks/libobs.framework ./libobs.framework
@@ -98,5 +90,44 @@ jobs:
       - name: Archive artifact
         uses: actions/upload-artifact@v4
         with:
-          name: obs-studio-exporter-macos-${{ matrix.arch }}
+          name: obs-studio-exporter-macos-arm64
           path: obs-studio-exporter.so
+
+  release:
+    name: Release
+    runs-on: ubuntu-22.04
+    needs:
+      - build-linux
+      - build-windows
+      - build-macos
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: obs-studio-exporter-linux
+          path: dist/linux
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: obs-studio-exporter-windows
+          path: dist/windows
+      - name: Download macOS ARM artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: obs-studio-exporter-macos-arm64
+          path: dist/macos-arm64
+      - name: Package artifacts
+        run: |
+          mkdir -p release
+          cp dist/linux/obs-studio-exporter.so release/obs-studio-exporter-linux.so
+          cp dist/windows/obs-studio-exporter.dll release/obs-studio-exporter-windows.dll
+          cp dist/macos-arm64/obs-studio-exporter.so release/obs-studio-exporter-macos-arm64.so
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly-${{ github.run_number }}
+          name: Nightly ${{ github.run_number }}
+          prerelease: true
+          generate_release_notes: true
+          files: release/*
