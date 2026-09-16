@@ -7,7 +7,7 @@ on:
 
 env:
   GO_VERSION: "1.21"
-  OBS_VERSION: "32.2.1"
+  OBS_VERSION: "32.2.2"
 
 permissions:
   contents: write
@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:obsproject/obs-studio
           sudo apt update
-          sudo apt install -y obs-studio
+          sudo apt install -y libsimde-dev obs-studio
       - name: Build
         run: |
           cp /lib/x86_64-linux-gnu/libobs.so.0 ./libobs.so
@@ -84,11 +84,13 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Install OBS
         run: |
+          brew install simde
           curl -L -o obs-macos-arm64.dmg "https://cdn-fastly.obsproject.com/downloads/OBS-Studio-${{ env.OBS_VERSION }}-macOS-Apple.dmg"
           hdiutil attach "./obs-macos-arm64.dmg"
       - name: Build
         run: |
           cp -R /Volumes/OBS*/OBS.app/Contents/Frameworks/libobs.framework ./libobs.framework
+          export CGO_CFLAGS="-I$(brew --prefix simde)/include"
           go build -buildmode=c-shared -o obs-studio-exporter.so -ldflags="-extldflags=-F$PWD"
       - name: Archive artifact
         uses: actions/upload-artifact@v4
