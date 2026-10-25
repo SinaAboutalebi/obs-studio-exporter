@@ -102,6 +102,7 @@ After you build the shared library, copy it into the OBS plugin directory for yo
 ## Notes
 
 - Linux builds in this repository currently link against `libobs.so.0`.
-- The workflow publishes prerelease GitHub Releases from `main`.
+- The workflow builds against OBS Studio **33.0.0** and publishes prereleases from `main` and `canon` with tags such as `v33.0.0-build.18`.
+- Stable release tags must match the OBS version, for example `v33.0.0` (or `v33.0.0-1` for an exporter revision); tagged builds create draft releases.
 - If you only need the latest build output, check the latest release assets instead of the workflow artifacts.
 - Mandatory disclaimer: *This is not an official Google product.*
