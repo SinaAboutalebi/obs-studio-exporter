@@ -45,8 +45,11 @@ jobs:
           [[ "$installed_version" == "$OBS_VERSION"* ]] || { echo "Expected OBS $OBS_VERSION, got $installed_version"; exit 1; }
       - name: Build
         run: |
-          cp /lib/x86_64-linux-gnu/libobs.so.0 ./libobs.so
+          libobs_path=$(dpkg-query -L obs-studio | awk '/\/libobs\.so$/ { print; exit }')
+          test -n "$libobs_path" && test -f "$libobs_path"
+          cp -L "$libobs_path" ./libobs.so
           go build -buildmode=c-shared -o obs-studio-exporter.so
+          readelf -d obs-studio-exporter.so | grep -E 'Shared library: \[libobs\.so(\.[0-9]+)*\]'
       - name: Archive artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
